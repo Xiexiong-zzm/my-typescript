@@ -7,3 +7,26 @@ let test1: never
 let test2: any
 
 // test1 = test2 报错，Type 'any' is not assignable to type 'never'
+type A = { 
+    s: string;
+    b: boolean;
+    f: () => string;
+    arr: string[];
+}
+// type B<T> = {
+//     readonly [S in keyof T]: B<T[S]>
+// }
+type B<T> = keyof T extends never ? T : {
+    readonly [S in keyof T]: B<T[S]>
+}
+type C = B<A>
+
+const pshObj: B<A> = {
+    s: '111',
+    b: false,
+    f: () => { return '1' },
+    arr: ['1']
+}
+const testObj: B<A> = null
+
+// pshObj.obj.aaa.bb = [1111]

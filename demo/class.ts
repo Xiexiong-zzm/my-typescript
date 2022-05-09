@@ -41,3 +41,17 @@ class Employer extends Person {
         this.age = age
     }
 }
+
+
+interface CircleStatic {
+    new (radius: number): void
+    pi: number
+}
+
+const Circle:CircleStatic = class Circle {
+    static pi: 3.14
+    public radius: number
+    public constructor(radius: number) {
+        this.radius = radius
+    }
+}
