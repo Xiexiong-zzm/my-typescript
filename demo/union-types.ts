@@ -6,12 +6,12 @@ num = '222'
 
 // 交叉类型
 // 如果要对对象形状进行扩展，可以使用交叉类型 &
-interface Test {
+interface Test2 {
     name: string,
     age: number
 }
 
-type Student22 = Test & {grade: number}
+type Student22 = Test2 & {grade: number}
 
 const student1:Student22 = {
     name: '11',
