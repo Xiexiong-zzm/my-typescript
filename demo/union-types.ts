@@ -18,3 +18,6 @@ const student1:Student22 = {
     age: 11,
     grade:2
 }
+type Student33 = Person & {grade: number}
+
+// 联合类型 | 是指可以取几种类型中的任意一种 而交叉类型是指把几种类型合并起来，实现对象形状的组合和扩展
