@@ -1,0 +1,709 @@
+----------基础知识--------------
+1、作用域和闭包
+* 执行上下文：范围是一段<script>或一个函数，执行之前先把变量定义、函数声明先拿出来。
+	全局作用域：变量定义、函数声明先拎出来。
+	函数作用域：变量定义、函数声明(注意不是函数表达式，以及它们的区别)、this、arguments
+* 自由变量：一个变量在当前作用域没有定义但被使用了，它就会往父级作用域一层一层找，直到找到为止
+* 变量提升：在JS执行之前先把全局或函数定义的变量拿到最前面
+* 闭包：当函数可以记住并访问所在词法作用域时，就产生了闭包，即使函数在词法作用域以外执行
+    表现形式：函数作为参数被传递、函数作为返回值被返回
+* this的几种使用场景：this要在执行时确定，定义时无法确定
+	作为构造函数执行、作为对象属性执行、作为普通函数执行、(call apply bind)
+* 创建10个<a>标签,点击弹出对应的序号
+for(let i = 0; i < 10; i++){
+    console.log(i)
+}
+* 如何理解作用域和作用域链
+	只有函数作用域和全局作用域，作用域链即是当前作用域没有定义的变量(自由变量)会去它的父级作用域寻找(函数的父级作用域是函数定义时的作用域，不是函数执行时的)
+* 实际开发中闭包的应用
+	函数作为返回值、函数作为参数传递
+
+2、let const var的区别
+* var会有变量提升，let和const没有变量提升
+* var在全局作用域声明的变量会作为window的属性，而let和const不会
+* let和const是有块级作用域，包含在{}或者函数里，var则没有
+
+2、什么时候不能使用箭头函数？
+* 箭头函数特点：没有arguments，无法通过apply、bind、call来改变this，它的this是指向父节点
+* 不能使用场景：对象的方法、原型的方法、构造函数、动态上下文中的回调函数ele.addEventListner()里头的回调不能用箭头函数、Vue的method和生命周期（vue组件export default {}的返回本质上是JS对象）,但是React可以使用，因为(非Hooks)它本质上是一个ES6的Class
+
+3、ajax  fetch axios的区别
+* 一个网络请求的统称
+    function ajax1(url, sucessfn){
+        const xhr = new XMLHttpRequest()
+        xhr.open("GET", url, false) // 这里的false表示异步请求
+        xhr.onreadystatechange = function() {
+            if(xhr.readyState === 4) {
+                if(xhr.status === 200){
+                    sucessfn(xhr.responseText)
+                }
+            }
+        }
+        xhr.send(null)
+    }
+* 一个具体API，支持promise
+    function ajax2(url){
+        return fetch(url).then(res => res.json())
+    }
+* axios是一个第三方库
+
+4、==的类型转换规则？
+* 首先会判断两者类型是否相同，相同则比较大小
+* 不相同则进行类型转换，类型转换会先判断是否在对比 null 和 undefined，是的话就会返回 true
+* 不是的话，判断两者类型是否为 string 和 number，是的话就会将字符串转换为 number
+* 不是的话，判断其中一方是否为 boolean，是的话就会把 boolean 转为 number 再进行判断
+* 不是的话，判断其中一方是否为 object 且另一方为 string、number 或者 symbol，是的话就会把 object 转为原始类型再进行判断
+
+5、JS中的包装类型和如何进行隐式类型转换
+* 包装类型：基本类型是没有属性和方法的，比如字符串在访问length和toUpperCas()的时候，后台隐式的将基本类型转换成包装类型对象，Object()函数是显式地将基本类型转换为包装类型
+* 包装类型对象显示转换成基本类型：使用valueOf()方法
+* 包装类型对象隐式转换基本类型：ToPrimitive(obj,type)方法是每个JS值隐含的自带方法，用来将值（无论是基本类型值还是对象）转换为基本类型值。如果值为基本类型，则直接返回值本身；如果值为对象，转换规则如下：
+    type为number：调用obj的valueOf方法，如果为原始值则返回，否则下一步；调用obj的toString方法，后续同上；抛出TypeError 异常。
+    type为string：调用obj的toString方法，如果为原始值则返回，否则下一步；调用obj的valueOf方法，后续同上；抛出TypeError 异常。
+* 场景：JS中的隐式类型转换主要发生在+、-、*、/以及==、>、<这些运算符之间，而这些运算符只能操作基本类型值。
+    对象在进行这些运算前的第一步就是将两边的值用ToPrimitive转换成基本类型，再进行操作。
+    加法的运算符来说，只要有字符串就会按字符串拼接。如果没有，转为数字计算
+    除了加法以外其他运算符按照数字转换计算
+
+4、for in 和 for of的区别 和 for await of
+* for in输出key,用于可枚举数据:数组、字符串、对象。Object.getOwnPropertyDescriptors()的属性描述是enumerable：true则是可枚举
+* for of输出value,用于可迭代数据:数组、字符串、Map、Set。数组属性Symbol.iteration函数里的next有则代表可迭代
+* for await of用于遍历多个promise === Promise.all([]).then()
+for await(let res of list){
+    console.log(res)
+}
+
+5、JS严格模式有什么特点
+* 全局变量要先声明、禁止使用with、禁止this指向window、创建eval作用域
+
+6、JS垃圾回收的算法
+* 内存泄漏，就是一些非预期的没使用的或者用不到的变量回收不了
+* 引用计数（以前使用的）、标记清除（现在使用的，通过遍历window下的属性，得到就保留，得不到就清除）
+* 内存泄漏的场景：全局变量、函数、定时器、自定义事件在组件销毁时未清除
+
+7、for和forEach哪个快？
+* for更快，for不会创建函数，forEach每次都要创建一个函数调用，函数需要独立的作用域，会有额外的开销
+
+8、浏览器Event Loop事件循环
+* 浏览器：没有分不同的类型和优先级
+*     Event Loop 监听将宏任务和微任务加入队列
+*     执行同步代码（new Promise也是立马执行，react的batchUpdate也是同步只不过表现行为像异步）
+*     执行异步代码
+*     队列先进先出原则  执行微任务 promise.then,async await,mutationObserve,自定义DOM事件的回调
+*     DOM渲染
+*     队列先进先出原则  执行宏任务 timeout,timeInterval,ajax
+*     Event Loop 继续监听
+
+9、前端常用设计模式和使用场景
+* 工厂模式
+    用工厂函数创建实例，隐藏new。比如jQuery的$函数；React的createElement函数
+    function factory() {
+        // 逻辑写这里
+        return new Foo()
+    }
+    const f = factory()
+* 单例模式
+    全局唯一的实例(无法生成第二个)。比如Vuex、Redux的store；全局唯一的dialog modal
+    class SingleTon() {
+        private static instance = null
+        private constructor() {}
+        // 这里定义的静态方法只能在class内部调用
+        public static getInstance() {
+            if(this.instance == null){
+                this.instance = new SingleTon()
+            }
+            return this.instance
+        }
+        // 这里定义的实例方法，只能在new SingleTon()的实例上调用,比如s.fn1()
+        fn1() {}
+        fn2() {}
+    }
+    const s1 = SingleTon.getInstance()
+    const s2 = SingleTon.getInstance()
+    s1 === s2
+* 代理模式
+    使用者不能直接访问对象，而是访问一个代理层，在代理层可以监听get、set做事情。比如ES6 Proxy响应式
+    var observe = new Proxy({}, {
+        get: function(target, key, receiver){
+            return Reflect.get(target, key, receiver)
+        },
+        set: function(target, key, value, receiver){
+            return Reflect.set(target, key, value, receiver)
+        },
+        delete: function(target, key, receiver){
+            return Reflect.delete(target, key, receiver)
+        },
+    })
+* 观察者模式
+    一个主题，一个观察者，主题变化之后触发观察者执行
+    btn.addEventListner('click', function() {})
+* 发布订阅模式
+    绑定事件，触发执行
+    event.on('eventKey', function() {}) // 订阅事件
+    event.emit('eventKey') // 发布事件
+* 装饰器模式
+    原功能不变，增加一些功能。例如ES和Typescript的Decorator语法；Nodejs的框架nest.js
+
+10、观察者模式和发布订阅模式的区别
+* 观察者模式的主题Subject和观察者Observer直接绑定，没有中间媒介
+* 发布订阅模式的发布者Publisher和观察者Observer互不联系，需要中间媒介Event Channel
+
+
+-----------手写函数-------------------
+1、节流和防抖的区别和使用场景，手写节流、防抖
+* 节流：别急，事件执行按照时间间隔一个个来，插队者无效
+* 场景：drag拖拽打印鼠标节点、scroll滚动条滚动
+function throttle() {
+    let timer = 0
+    return function() {
+        if(timer) return
+        timer = setTimeout(() => {
+            fn.apply(this, arguments)
+            timer = 0
+        }, delay)
+    }
+}
+
+* 防抖：先让抖动着，防止进行下一步操作，啥时候不抖动不操作了，再进行下一步操作
+* 场景：按钮疯狂点击、输入框查询
+function debounce(fn, delay=200) {
+    let timer = 0
+    return function() {
+        if(timer) clearTimeout(timer)
+        timer = setTimeout(() => {
+            fn.apply(this, arguments)
+            timer = 0
+        }, delay)
+    }
+}
+
+2、手写深拷贝
+* JSON.stringify()深拷贝遇上函数、Map和Set数据、循环引用的时候就不起作用了
+function deepClone(obj = {}){
+	// obj == null 就相当于object === null || object === undefined
+	if(typeof obj !== 'object' || obj == null) {
+		return obj
+	}
+	let result 
+	if(obj instanceof Array){
+		result = []
+	}else if(obj instanceof Object){
+		result = {}
+	}
+	for(let key in obj){
+		// 保证key不是原型上的属性
+		if(obj.hasOwnProperty(key)){
+			result[key] = deepClone(obj[key]) // 递归
+		}
+	}
+	return result
+}
+
+3、手写Lazyman()，实现sleep机制
+* new Lazyman('黄贻飞').eat('苹果').sleep(5).eat('葡萄') // 打印结果：'黄贻飞eat苹果'->等待5s->黄贻飞吃葡萄
+class Lazyman {
+    #name
+    #tasks
+    static #next() {
+        const task = this.tasks.shift()
+        if(task) return task
+    }
+    constructor(name){
+        this.#name = name
+        this.#tasks = []
+    }
+    eat(food) {
+        const task = () => {
+            console.log(`${this.name} eat ${food}`)
+            this.next()
+        }
+        this.tasks.push(task)
+
+        return this
+    }
+    sleep(second) {
+        const task = () => {
+            setTimeout(()=> {
+                console.log(`${this.name} sleep ${second}`)
+                this.next()
+            }, second * 1000)
+        }
+        this.tasks.push(task)
+
+        return this
+    }
+}
+
+4、手写instanceof
+* 原理是判断一个对象在其原型链中是否在一个构造函数的property属性
+function myInstanceof(left, right){
+    let proto = Object.getPrototypeOf(left) // 获取对象的原型
+    let prototype = right.prototype // 构造函数的prototype对象
+    while(true) {
+        if(!proto) return false
+        if(proto === prototype) return true
+        proto = Object.getPrototypeOf(proto)
+    }
+}
+
+12、new原理并用代码实现new的功能
+* 创建一个新对象obj,它继承构造函数的原型
+* 让this指向obj,执行构造函数
+* 返回新对象obj
+function myNew(constructor, ...args) {
+    const obj = Object.create(constructor.prototype)
+    constructor.apply(obj, args)
+    return obj
+}
+--------------Nodejs---------------------------
+1、 Nodejs事件循环：分不同的类型和优先级
+*     执行微任务的时候，process.nextTick优先级最高
+*     执行宏任务，按照以下6个类型顺序：
+*         Timers: setTimeout setInterval(代码层管理的)
+*         I/O: callbacks 处理网络、流、TCP的错误回调
+*         Idle,prepare: 闲置状态
+*         Poll轮询： 执行Poll的I/O队列
+*         Check检查： setImmediate回调(代码层管理的)
+*         关闭回调：socket.on('close')
+* node执行JS栈中的代码，发现宏任务将其放到对应的宏任务队列，微任务放到微任务队列。
+* 将JS栈中的代码执行完毕后，清空微任务队列，进入事件环，取出第一个宏任务进入JS执行栈执行。
+* 完毕后，清空微任务对列，进入宏任务取下一个，形成事件环
+    注意：process.nextTick微任务会在微任务队列中第一个执行
+
+2、Nodejs为什么开启子进程，如何开启进程，进程如何通讯？
+* JS是单线程，碰到耗时较久或者CPU密集型操作的时候会阻塞主线程，所以为了程序运行效率和内存合理分配可以开启多进程
+* child_process.fork()、cluster
+    // 主进程JS（a.js文件）
+    const http =  require('http')
+    const fork = require('child_process').fork()
+    const server = http.createServer((req, res) => {
+        if(req.url === '/get-sum'){
+            console.info('主进程id', process.pid)
+            // 开启子进程
+            const sonProcess = fork('./b.js')
+            sonProcess.send('开始计算')
+            sonProcess.on('message', data => {
+                console.log('主进程接收的信息', data) // 3
+                res.end('sum', data)
+            })
+            sonProcess.on('close', data => {
+                console.log('子进程报错了')
+                sonProcess.kill() // 报错杀死进程
+            })
+        }
+    })
+    server.listen(3000, () => {
+        console.log('3000端口被监听')
+    })
+
+    // 子进程JS(b.js文件)
+    const getSum = () => {
+        const a = 1
+        const b = 2
+        return a+b
+    }
+    process.on('message', data => {
+        console.log('子进程id', process.pid)
+        console.log('子进程接收的信息', data) // 开始计算
+
+        const sum = getSum()
+        // 发送消息给主进程
+        process.send(sum)
+    })
+* cluster
+    if(cluster.isMaster) {
+        for(let i = 0;i < cpuLength; i++){
+            cluster.fork() // 开启子进程
+        }
+        cluster.on('exit', worker => {
+            cluster.fork() // 进程守护
+        })
+    }else {
+        // 多个子进程共享一个TCP连接，提供一份网络服务
+        // 在这里createServer
+    }
+* 工作中一般用PM2管理服务集群
+
+3、非阻塞I/0怎么理解
+*系统的输入/输出，阻塞和非阻塞的区别就在于系统接收输入再到输出期间，能不能接收其他输入。
+
+
+4、nodejs如何进行编码和解码：
+    对于字符串将Buffer转换为字符串通常称为解码，将字符串转换为Buffer通常称为编码
+        import {Buffer} from 'node:buffer'
+        const buf = Buffer.from('hello world', 'utf8') // 编码
+        console.log(buf.toString('hex')) // 解码
+    二进制转文本编码命名与字符串相反（base64、hex、ascii等）
+        import {Buffer} from 'node:buffer'
+        const buf = Buffer.from('aGk=', 'base64') // 解码
+        console.log(buf.toString('base64')) // 编码
+    对base64位编码和解码过程：
+        const { Buffer } = require('node:buffer')
+        const str = 'hi'
+        //编码
+        const buff = Buffer.from(str, 'utf-8') // <Buffer 68 69>
+        const base64 = buff.toString('base64') // aGk=
+        // 解码
+        const buff2 = Buffer.from(base64, 'base64') // <Buffer 68 69>
+        const str2 = buff2.toString('utf-8') // hi
+5、npx的原理和主要解决什么问题
+    npx的原理很简单，就是运行的时候，会到node_modules/.bin路径和环境变量$PATH里面，检查命令是否存在
+    主要解决问题:
+        切换node版本
+        在命令行下,调用内部安装模块
+        避免全局安装模块
+        执行github上模块代码(前提:远程代码必须是一个模块，即必须包含package.json和入口脚本)
+6、 npm提供了哪些钩子？各有什么作用
+    npm 拥有以下的钩子命令：对于任何在package.json的scripts字段中定义的命令，可以通过 pre 以及 post 名称前缀，额外定义该任务在执行前、后的额外执行的钩子命令
+    "scripts": {
+        "premy-task": "echo 'task begin...'",
+        "my-task": "node my-task.js",
+        "postmy-task": "echo 'task completed!'"
+    }
+    运行npm run my-task的时候，会去先执行premy-task，等my-task执行完，就会去执行postmy-tasks
+    我们可以尝试用钩子命令来解决以上的npm客户端差异的问题，对用户当前使用的npm客户端进行预检。如果当前启动命令的是不合适的npm客户端，提前给出提示并抛出错误、中止后续行为。
+
+7、微服务Consul
+* 概念：是一个分布式高可用的系统，一个发现和配置服务的工具。客户端可以利用它提供的API注册和发现服务，及监控检测功能实现服务的高可用
+* consul解决了哪些问题
+    是否在为不同环境来维护不同项目配置而发愁
+    是否有因为配置的更改，导致代码还要进行修改、发布，因为客流量大了还要规避高峰期等到半夜发布
+    微服务架构下，应用的分解，业务系统与服务系统之间调用管理
+* 四大核心特性
+    服务发现：可以方便的实现服务注册，通过DNS或者HTTP应用程序可以很容易的找到他所依赖的服务.
+    Key/Value存储：使用Key/Value进行数据存储。
+    多数据中心：Consul支持开箱即用的多数据中心。这意味着用户不需要担心建立额外的抽象层让业务扩展到多个区域
+    健康检查：可以对指定服务进行健康检查例如，Response Status是否为200，避免将流量转发到不健康的服务上
+
+8、Node能获取客户端IP吗？如何获取？
+* 如果没有反向代理，TCP可以直接通过req.connection.remoteAddress属性获取IP地址。而在HTTP请求中，可以通过判断后端sokect的req.sokect.remoteAddress
+* 如果有反向代理，一般前端的服务不会直接接受外部请求，而是部署在接入层后，这样可以实现多个服务负载均衡和高可用，这时候我们remoteAddress拿到的是代理服务器IP。
+* 反向代理实现统一的约定，转发请求给下游服务器会把请求的IP写入X-Forwarded-For头中，所以通过req.headers['x-forwarded-for']获取IP
+* X-Forwarded-For: client, proxy1, proxy2  例：Forwarded: for=127.0.0.1; proto=https, for=1.2.3.4; proto=https
+
+9、node开启多进程的fork和cluster有什么区别
+* fork模式，单实例多进程，常用于多语言混编，比如php、python等，不支持端口复用，需要自己做应用的端口分配和负载均衡的子进程业务代码。
+    缺点就是单服务器实例容易由于异常会导致服务器实例崩溃。
+* cluster模式，多实例多进程，但是只支持node，端口可以复用，不需要额外的端口配置，0代码实现负载均衡。
+    优点就是由于多实例机制，可以保证服务器的容错性，就算出现异常也不会使多个服务器实例同时崩溃。
+* 共同点，由于都是多进程，都需要消息机制或数据持久化来实现数据共享
+
+10、koa2洋葱圈模型
+* 通过app.use注册中间件，每个中间件里头都是一个async await，每个遇到await next()则先执行下一个中间件，然后再回来执行await后的代码
+* next()的原理
+    class App extends Emitter {
+        listen(){
+            const fnMiddleware = compose(this.middleware);
+            fnMiddleware(ctx).then(handleResponse).catch(onerror);
+        },
+        use(fn){
+            this.middleware.push(fn);
+            return this;
+        }
+    }
+
+11、setHeader和writeHead的区别
+    setHeader 只能一个一个设置标头，writeHead可以一下设置很多
+    setHeader 可以重复调用，writeHead只能调用一次
+    同时出现setHeader和writeHead，setHeader会合并到writeHead，并且writeHead优先级高
+    writeHead 可以设状态码和状态信息，setHeader不能设置，只能设置标头
+
+12、iframe有何优缺点
+* 页面加载问题，iframe和主页面共享连接池，浏览器对相同域的连接有限制，所以影响页面并行加载onload事件
+* 布局问题，iframe必须给个指定高度，否则会塌陷
+* 弹窗和遮罩问题，弹窗只能在iframe范围内垂直水平居中，没法在整个页面
+* 浏览器刷新后前进/后退问题，iframe和主页面共用页面历史，刷新后无法保持路由状态
+* iframe加载失败不好处理
+
+13、requestIdleCallback和requestAnimationFrame有何区别
+* 它们都是宏任务,要等DOM渲染完再执行
+* requestAnimationFrame是浏览器渲染完以后都会执行的，高优先级
+* requestIdleCallback是浏览器渲染空闲时候执行的，低优先级。所以React的fiber方案就是基于这个API实现空闲时候执行diff算法
+* 浏览器网页在执行动画或者动态的时候要每秒60帧看上去才不会卡顿，也就是说16.6ms/帧渲染一次才不会卡顿,当帧发生变化就会调用上述方法
+
+14、script、defer、async有啥区别
+* script标签: 解析html过程中碰到script标签，暂停解析html，加载js并执行js，再解析html
+* defer：解析html过程并行请求js，待html解析完成再执行js
+* async: 解析html过程并行请求js，立刻执行js，执行完再继续解析html
+
+15、prefetch和preload区别
+* preload是提前加载，资源在当前页面使用，会优先加载
+* prefetch是提前获取，资源在未来页面使用，空闲时加载
+* 放在head标签里，<link ref="preload" href="a.js/a.css" as="style/script">
+* dns-prefetch是dns的预查询，提前解析要打开的网页进行dns解析<link ref="dns-prefetch" href="http://www.baidu.com">
+* preconnect是dns的预连接
+
+16、如果实现网页多标签的通讯？
+* LocalStorage(适合同域的多个页面)
+    A页面：
+        const newInfo = {
+            id: 1,
+            title: '设置的新标题'
+        }
+        localstorage.setItem('newInfo', JSON.stringify(newInfo))
+    B页面：
+        window.addEventListener('storage', event => {
+            console.log('key', event.key) // newInfo
+            console.log('value', event.newValue) // '{id:1,title:"设置新标题"}'
+        })
+* SharedWorker:它是WebWorker的一种,可单独开启一个进程用于同域页面通讯,可执行JS但不能操作DOM。不兼容IE11
+// 本地调试SharedWorker需要在Chrome的隐私模式下
+worker.js:
+    const set = new Set()
+    onconnect = event => {
+        const curPort = event.ports[0]
+        set.add(curPort)
+        // 接收信息
+        curPort.onmessage = e => {
+            // 通知广播消息给其他页面
+            set.forEach(p => {
+                if(port === curPort) return // 不给自己广播
+                p.postMessage(e.data)
+            })
+        }
+        // 发送信息
+        curPort.postMessage('worker done')
+    }
+html:
+    const worker = new SharedWorker('./worker.js')
+    worker.port.onmessage('detail get e.data') // 接收信息
+    worker.port.postMessage('detail go ……') // 发送信息
+* websocket(适合不同域的多个页面)，可跨域，需要服务端，成本高
+server：
+    const {WebSocketServer} = require('ws')
+    const wsServer = new WebSocketServer({
+        port: 3000
+    })
+    const list = new Set()
+    wsServer.on('connection', curWs => {
+        console.log('connect done')
+        list.add(curWs)
+        curWs.on('message', msg => {
+            // 广播给其他客户端
+            list.forEach(ws => {
+                if(ws === curWs) return
+                ws.send('WebSocket收到了来自客户端信息', msg.toString())
+            })
+        })
+    })
+html：
+    const ws = new WebSocket('ws://192.168.1.103:3000')
+    ws.onopen = function(){
+        console.log('client opened')
+        ws.send('client发送消息给服务端')
+    }
+    ws.onmessage = function(event) {
+        console.log('client接收来自服务端的消息：', event.data)
+    }
+17、网页和iframe如何通讯
+* iframe：
+    window.parent.postMessage('第一个参数是发送的信息', '第二个参数也是域名')
+    window.addEventListener('message', event => {
+        console.log(event.origin) // 判断来源的域名
+        console.log(event.data) // 接收的信息
+    })
+* 网页：
+    // iframeId是嵌套iframe的id
+    window.iframeId.contentWindow.postMessage('第一个参数信息', '第二个参数是发送的域名，可设置*不限制域名') // 核心API
+    window.addEventListener('message', event => {
+        console.log(event.origin) // 判断来源的域名
+        console.log(event.data) // 接收的信息
+    })
+
+18、JSBridge的原理
+* APP提供的一个webview组件，它像浏览器一样具有承载H5页面的能力。H5想要用Native的某些原生能力，H5对Native会往webview中提供API的封装就是JSBridge
+* 有两种方式：
+    全局注册API：像浏览器适合简单的数据通信，有window全局对象，window.fn = function(){}。但是不适合异步的情况，比如需要APP去调接口拿信息或者读取文件等等
+    URL Scheme：网页中嵌套个iframe,设置url,网页不会直接去请求资源,而是通过APP去中转请求。自定义的url格式如：app://api/fn，APP拿到后知道是自己定义了，然后提供了想要的能力
+    封装JSBridge:
+        const sdk = {
+            invoke(url, data = {}, onSuccss, onError) {
+                const iframe = document.createElement('iframe')
+                iframe.style.visibility = 'hidden'
+                document.body.appendChild(iframe)
+                iframe.onload = () => {
+                    const content = iframe.contentWindow.document.body.innerHTML
+                    onSuccss(JSON.parse(content))
+                    iframe.remove()
+                }
+                iframe.onerror = () => {
+                    onError()
+                    iframe.remove()
+                }
+                iframe.src = `appName://${url}?data=${JSON.stringify(data)}`
+            },
+            fn(data, onSuccss, onError){
+                this.invoke('usmart://trade', data, onSuccss, onError)
+            }
+        }
+
+19、JQuery事件委托（事件代理）的原理
+* 事件委托就是用事件捕获和事件冒泡，事件捕获是window对象传导到目标节点，事件冒泡是目标节点传导回window对象
+* 事件委托是利用事件冒泡的机制把里层所需要响应的事件绑定到外层
+* JQuery事件委托顺序：先处理自身绑定事件、父元素绑定事件 -> 再分别处理自身、父元素委托给祖先的绑定事件 -> 最后处理祖先自身的事件
+
+20、ES6更新主要的高级特性
+* 表达式：声明const let，解构赋值：对象、数组等
+* 内置对象：
+    字符串扩展: includes、startWith
+    数值扩展：Number.isNaN
+    对象扩展：Object.assign()、for/in、Object.getPrototypeOf()
+    数组扩展：扩展运算符... 、values、entries、Array.from()
+    函数扩展：箭头函数、rest
+    Symbol、Set、Map、Proxy、Reflect(getOwnPropertyDescriptors判断是否可迭代对象)
+* 语句与运算：Class、Module(import、export)、Iterator迭代器
+* 异步编程：
+    Promise：异步操作结果的对象，对象的状态不受外界影响；一旦状态改变就不会再变，任何时候都可得到这个结果
+    Generator(yield)：
+    Async/await：
+
+
+------------HTTP网络、浏览器、web安全-------------------
+1、TCP三次握手（建立连接）和四次挥手（关闭连接）
+* 为什么三次握手：为了防止已失效的连接请求突然又传送到了服务端，因而产生错误
+* 三次握手：客户端发送SYN报文和生成序号给服务端（1次）；服务端接收到报文后，生成新的序号和确认序号并将SYN+ACK报文发送给客户端（2次）；客户端接收到报文，开始发送数据
+* 四次挥手：
+
+2、token、cookie、session有什么区别
+* cookie是http请求都会带cookie，跨域不共享，跨域不传递，大小限制再4kb。用于识别身份，它有如下的属性：
+    作用域domain、是否允许客户端通过JS修改httpOnly、有效时长max-age、过期时间点expires、sameSite限制第三方Cookie(保护用户隐私)、路径作用域path、设置安全模式secure(请求必须是安全连接https,cookie才会被保存下来)
+    Max-Age和Expires同时存在,以max-age为准。都没设置，cookie的有效期就会设置为session，一种临时会话状态，会在浏览器关闭时销毁
+    允许跨域传递cookie前端可以设置withCredentials
+* session存储在服务器缓存里，比如接口登录以后，session存储用户各种信息的对象，然后给浏览器set-cookie自定义的userId: 'x1',下一次接口时带上userId: 'x1'，服务器就会去session对应的存储对象拿信息
+* token是自定义的，需自己存储，没有跨域限制
+* JWT（自己手动定义比如Authorization的字段添加到req.headers里头），前端登录后端校验成功后返回一个加密的token，前端自行存储这个token，用于后续接口校验
+
+3、从url输入到页面展现的过程
+* 首先通过DNS解析得到IP地址
+* 然后建立TCP连接，发送http请求
+* 服务端收到http请求，处理并返回数据
+* 浏览器接受到服务器返回的内容解析成结构化数据，html解析成dom树，css解析成cssDom树，两者结合形成render tree进行渲染
+
+4、UDP协议、TCP协议、HTTP协议区别
+* UDP协议是传输层协议，无连接无断开，不稳定传输效率高。适用于视频会议、网络通话
+* TCP协议是传输层的协议，主要解决数据如何在网络中传输，有连接有断开，稳定传输
+* HTTP协议是应用层协议，主要解决如何包装数据，HTTP协议是建立在TCP协议基础上
+* 当浏览器需要从服务器获取网页数据的时候，会发出一次Http请求。Http会通过TCP建立起一个到服务器的连接通道，当本次请求需要的数据完毕后，Http会立即将TCP连接断开，这个过程是很短的，所以Http连接是一种短连接，是一种无状态的连接。
+
+5、Websocket协议通信
+* 端对端通讯，没有跨域限制，可以由客户端发起，也可以由服务端发起。连接的时候先是http连接，再升级为webSocket。协议名"ws://"
+* 实际项目用socket.io，发送信息用socket.emit,接收信息用socket.on('reply')
+* 优点：http协议只能单项客户端向服务器发送请求，websocket和服务器握手进行建立连接，可以实现双向通信，服务器可以向客户端主动推送消息
+* 应用场景： 多人协同编辑、聊天、直播间、实时地图等实时更新或者连续数据流的情况
+* 判断离线：第一次请求带上唯一的标识和时间戳，服务端存储起来，等到第二次请求拿出之前的时间戳进行计算判断是否大于指定失效时间，小于就在线大于就离线
+
+6、Cors有哪些属性
+* Access-Control-Allow-Origin
+* Access-Control-Allow-Credentials
+
+7、http常见的状态码
+* 1**：信息，服务器收到请求，需要请求者继续执行操作
+* 2**：成功，操作被成功接收并处理
+* 3**：重定向，需要进一步的操作以完成请求
+* 4**：客户端错误，请求包含语法错误或无法完成请求
+* 5**：服务器错误，服务器在处理请求的过程中发生了错误
+
+8、HTTP1.0、HTTP1.1和HTTP2.0有什么区别
+* HTTP 1.0最基础的协议，支持基本的GET、POST方法
+    GET：GET请求的参数会是拼在URL中，浏览器会限制URL的长度。一般用于获取服务器内容
+    POST：POST请求携带数据一般是写在报文body中，一般用于修改服务器的资源
+* HTTP 1.1
+    支持缓存策略cache-control E-tag
+    默认有个头Connection:keep-alive支持长连接,一次tcp连接多个请求
+    断点续传，状态码206
+    支持新的方法PUT、DELETE等，可用于Restful API
+* HTTP2.0
+    可压缩header,减少体积
+    多路复用，一次TCP连接可以多个HTTP并发请求
+    服务端推送
+
+9、HTTP缓存机制
+    对于一些具有重复性的HTTP请求，比如每次请求得到的数据都一样的，我们可以把这对「请求-响应」的数据都缓存在本地
+* 强缓存：只要浏览器判断缓存没有过期，就会使用浏览器本地的缓存，强缓存是利用Cache-Control、Expires，Cache-Control的优先级高于Expires
+* 协商缓存：与服务端协商之后，通过协商结果来判断是否使用本地缓存
+
+
+9、什么是HTTPS的中间人攻击？如何预防
+* HTTP是明文传输，HTTPS是HTTP+TLS/SSL加密传输,先是非对称加密，再是对称加密
+* 服务端有公钥和私钥，客户端发送请求，服务端会把证书包含公钥传给客户端，客户端解析证书取到公钥并生成随机码KEY，使用公钥加密KEY
+* 然后客户端把加密后的KEY发送给服务端，服务端用私钥解密随机码KEY，使用随机的KEY再对数据进行加密传输给客户端
+* 客户端使用之前生成的随机码KEY解密数据
+* 中间人攻击是黑客直接在客户端发送请求过程中劫持，并用自己的公钥和私钥，传给服务端伪造的加密数据，返回给客户端伪造证书
+* 预防：服务器使用官方正规的第三方证书，客户端解析证书会验证合法性，不合法会报HTTPS的警告
+
+10、前端常见攻击手段
+* XSS攻击（跨站脚本攻击），JS代码插入到网页，渲染时执行JS。预防：替换特殊字符
+* CSRF攻击（跨站请求伪造），黑客诱导用户去访问另个网站的接口，伪造请求。预防：严格跨域限制+验证码机制，设置cookie的sameSite禁止跨站传递
+* 点击劫持：界面上弄一个透明的ifame,诱导用户点击。预防：判断域名是否一致top.location.hostname === self.location.hostname；设置响应header的x-frame-option：sameOrigin同源
+* DDoS攻击：分布式、大规模流量访问，使服务器瘫痪。预防：硬件预防，阿里云的WAF防火墙
+* SQL注入：通过提交内容时写入SQL语句破坏数据库。预防：处理输入内容，替换特殊字符。node有个方法Crypto可以对SQL语句处理下
+    例如：登录 'zhangsan' '123'
+    正常sql查询： select * from users where username='zhangsan' and pword='123';
+    现在黑客将username提交的内容改成：'';delete from users; --'，sql语句就会变成：
+    select * from users where username='';delete from users; --' and pword='123';
+    sql语句变成了三段：
+        select * from users where username=''; // 搜索username条件为空
+        delete from users; // 删除表
+        --' and pword='123' // 注释
+
+-------------CSS-------------------
+1、px绝对单位 %是相当于父元素的 em相对于当前元素的font-size rem相对于根节点的font-size  vw/vh 屏幕宽高的1%
+// 元素水平垂直居中
+    元素设定宽高：
+    ①   position: absolute;
+        left: 50%;
+        top: 50%;
+        margin-top: -80px;
+        margin-left: -80px;
+    ②   position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+    ③   position: absolute;
+        top: calc(50% - 80px);
+        left: calc(50% - 80px);
+    元素无需设定宽高
+    ④   top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    ⑤父元素设置flex
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+2、less/sass用法和编译，较css新增了什么功能
+* 预编译语言，新增了嵌套写法、@import模块系统、定义变量$、混合指令@mixin抽公共样式 @include用、继承机制@extend+class的名字、
+* 复杂计算的函数
+    $baseFontSize: 20;
+    @function px2rem($val) {
+        @return $val/$baseFontSize + rem;
+    }
+    .big-text{
+        font-size: px2rem(30);
+    }
+* 控制流 @if、@for、@each、@while
+
+3、盒子模型
+* 它包含了border、margin、padding、content、box-sizing
+* box-sizing属性值：
+    border-box, content内容的width = div设置的width - border - padding
+    content-box，就是实际设置div的width
+
+4、offsetHeight、scrollHeight、clientHeight区别
+* offsetHeight = border + padding + content
+* clientHeight = padding + content
+* scrollHeight = padding + 实际内容尺寸
+
+5、重绘repaint和重排reflow有什么区别
+* 重新渲染就分重绘和重排，比如动态页面增加/删除元素、dialog弹框等
+* 重绘：元素外观改变，比如颜色、背景色，但元素的尺寸和位置不变，不会影响其他元素的位置
+* 重排：重新计算尺寸和布局，可能会影响其他元素的位置。比如元素高度增加可能使相邻元素的位置下移
+* 重排比重绘影响大，消耗也大。所以减少重排，有如下方式：
+    集中修改样式，或直接切换css class
+    修改之前设置dislay:none脱离文档流
+    使用BFC特性，不影响其他元素的位置
+    频繁触发（resize、scroll）使用节流防抖
+    使用createDocumentFragement批量操作DOM
+    动画使用css3和requestAnimationFrame

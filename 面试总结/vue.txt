@@ -1,0 +1,228 @@
+1、v-if和v-show的区别
+* v-if是通过销毁和重新渲染组件控制显示隐藏，v-show则通过style的display控制显示隐藏
+
+2、key的作用
+* key在vue中diff算法中sameNode方法就是根据key和tag一起去判断节点的
+
+3、vue的生命周期（挂载阶段、更新阶段、销毁阶段）
+* 有父子组件情况，生命周期符合洋葱模型外->里->外
+* vue2: beforeCreate->created->beforeMount->mounted (->beforeUpdate->updated) ->beforeDestroy->destroyed
+* vue3: beforeCreate->created->beforeMount->mounted (->beforeUpdate->updated) ->beforeUnmount->unmounted
+* 挂载阶段：
+    beforeCreate：初始化一个vue实例，事件和生命周期钩子初始化
+    created：初始化依赖注入和完成响应式data绑定。此时data、computed、watch都可使用，但dom未渲染
+    beforeMount: 编译模板，调用render生成虚拟vdom。具体流程如下
+        判断是否有el元素
+            有el元素就去判断是否有template模板，有模板就编译模板成render函数，没有模板就把el的outerHTML作为模板
+            没有el元素，当vm.$mount()调用时作为el元素
+    mouted: dom渲染完成，组件创建完成
+* 更新阶段：
+    beforeUpdate：data发生改变，准备更新dom
+    updated：dom更新完成
+* 销毁阶段：
+    beforeDestroy/beforeUnmount：组件销毁前，用于移除或解绑全局事件、自定义事件、定时器的清除
+    destroyed/unMounted：组件销毁完成
+* keep-alive: 组件只创建一次被缓存
+    activated/onActivated：缓存组件被激活
+    deactivated/onDeActivated：缓存组件被隐藏
+
+4、vue的组件通讯
+* 父子组件：props和emit
+* 多级组件：inject/provide
+* 自定义事件 $emit $on
+* bus总线 new Vue()  
+* $attrs inheriteAttr（可控制不显示在最后一层标签中）
+
+5、vue组件的渲染和更新
+* 渲染：组件模板编译成render函数，初始化数据并监听data的数据变化，将data的getter依赖收集到watcher，执行render生成vNode渲染页面
+* 更新：当数据发生改变时，触发响应式，触发setter并通知找到对应的watcher,重新执行render函数，生成vNode
+
+6、双向绑定v-model的实现原理或者问数据响应式原理
+* vue2是通过Object.defineProperty()，缺点是迭代计算量大、新增和删除属性没法监听（需要手动set和delete）、无法监听数组（需要对数组进行特殊处理）
+* vue2数组处理：创建一个数组原型arrPrototype，用Object.create(arrPrototype),往里头添加自定义方法，方法里头执行的时候用call改变this指向
+    const arryProto = Array.prototype
+    const obj = Object.create(arryProto)
+    ['push', 'shift', 'unshift', 'pop', 'reverse', 'splice'].map(method => {
+        obj[method] = function() {
+            arryProto[method].call(this, ...arguments)
+        }
+    })
+* vue3是通过Proxy，用Reflect.set() Reflect.get() Reflect.delete(),兼容性问题
+
+7、事件被绑定到哪里
+* 事件是原生的DOM对象，事件被挂载到当前元素上
+
+8、Vue的diff算法原则
+* 只同级比较，不跨级比较；碰到tag不同直接删除重建，不再进行深度比较；子节点通过tag和key去区分，相同的节点不再进行深度比较
+* 实现方式：vue2是双端比较，创建新旧子节点首尾四个指针去比较,vue3在原来基础上再加了最长递增子序列的算法优化
+* patch函数：patch(ele, vnode)或patch(oldVnode, vnode)。
+* ①第一步：判断第一个参数是否元素ID，是则直接创建新的vnode；否，则直接对vnode进行相同sameNode的比较。
+* ②第二步：如果两个vnode相等则进入patchVnode()方法处理，如果不相等直接删除重建 处理返回的vnode，进行diff算法比较
+* ③第三步：进入patchVnode方法,先把旧的elem赋值给新的elem。注意vnode中text和children是不同存的，有text就没有children,有children就没有text
+    // 新的text无,说明有children可能有值可能没值
+    if(isUndef(vnode.text)){
+        // 如果新children有，旧children有，如果不相等直接走updateChildren方法
+        // 如果新children有，旧children无(说明旧的text有)，则清空text,再addVnodes()添加节点
+        // 如果新children无，旧children有，直接removeVnodes()移除子节点
+        // 如果新children无，旧children无(说明旧的text有)，则清空text
+    } 
+    // 新的text有,说明无children
+    else if(oldVnode.text !== vnode.text){
+        removeVnodes() // 新children无，直接移除旧的子节点
+        setTextContent() // 并设置新text
+    }
+
+9、Vue如何实现高阶组件？
+const HOCFactory = (Component) => {
+    const instance = new Vue({
+        // 实现公共组件逻辑
+        created () {},
+        mounted () {},
+        data () {},
+        render: (h) => h(Component, {
+            props: {
+                // 传入props
+            }
+        }) 
+    })
+    return instance
+}
+
+10、vue的路由配置mode有几种方式
+* hash/createWebHashHistory(默认): #/user,没有对路由全覆盖也不会有404，浏览器网页跳转和前进后退不会触发刷新，原理通过浏览器的onhashChange监听变化
+* history/createWebHistroy: /user，需要server端配合，路由没覆盖会出现404，原理通过浏览器的history.pushState打开新路由和window.onpopstate监听浏览器前进后退
+* abstract/createMemoryHistory：SPA的路由不会变，不会有前进后退变化，只是触发不同的组件渲染
+* 区别：url上是否有#，是否需要服务器端配合，是否出现404
+const state = {name: 'page1'}
+history.pushState(state, '', 'page1')
+window.onpopstate = (event) => {
+    console.log(event.state)
+}
+
+13、Vue异常捕获功能
+* errorCapture(子组件，会往上冒泡，只有return false的时候不会往上冒泡)
+* errorHandler(mainjs的根组件上，但是无法捕获vue之外的错误和异步错误)
+* window.onerror(vue以外的错误用它来捕获)
+
+14、Vue中$route和$router的区别
+* $router是vue-router的实例，访问它相当于访问了路由文件，具体实例提供的钩子方法
+* $route是路由信息对象，这个属性是只读，通过它可以访问当前路由相关信息
+
+15、Vue单向数据流和v-model双向绑定有设计上的冲突吗
+*单双向绑定指的是View和Model层的映射关系，单向数据流指的是组件之间的数据流动，子组件不能修改父组件传来的值。v-model不是真正的双向绑定，它只是v-bind:value和v-on:input的语法糖
+*单双向数据绑定与数据流是两个不同维度的概念，数据绑定是View与Model之间的映射关系，数据流指的是组件之间的数据流动。因此，单向数据流也可有双向绑定，双向数据流也可以有双向绑定，两者不应该混为一谈
+
+17、Vue为什么会出现$nextTick
+* vue的mounted和updated生命周期钩子不会保证所有的子组件都被挂载完成，如果希望视图渲染完毕执行操作用$nextTick
+* Vue是异步执行DOM更新，只要观察到数据变化，Vue将开启一个队列并缓冲在同一事件循环中发生的所有数据改变，如果同一个watcher被多次触发，只会被推入到队列中一次。这种在缓冲时去除重复数据对于避免不必要的计算和DOM操作上非常重要
+* 原理：将callback回调放到异步队列中，有个pending的标识判断事件是否第一次加入，第一次加入才推到队列中,在下一次事件循环中执行传入的callback回调
+
+18、Vue的依赖注入和Vuex有啥区别
+*Provide和Inject提供的数据是组件特有的，是非响应式的，而Vuex则是共享的通用化数据
+
+19、为什么Vue3不使用时间切片(Time Slicing)
+* 丢帧（janky）更新通常是由于同步的高CPU时间和大量的原生DOM的更新造成的
+* 丢帧的场景：
+    CPU工作时间在16ms以内，但是需要操作大量的原生DOM更新操作（例如，挂载大量新的DOM内容）。不管你有没有使用时间切片，应用依旧会感觉到掉帧。
+    CPU任务非常繁重，需要超过16ms的时间。从理论上讲，时间切片开始发挥作用了。然而，HCI的研究表明，除非它在进行动画，否则对于正常的用户交互，大多数人对于100毫秒内的更新是感觉不到有什么不同的。
+* React经常出现掉帧的情景：
+    React的虚拟DOM操作（reconciliation）天生就比较慢，因为它使用了大量的Fiber架构
+    React使用JSX来渲染函数相对较于用模板来渲染更加难以优化，模板更易于静态分析
+    React Hooks将大部分组件树级优化（即防止不必要的子组件的重新渲染）留给了开发人员，开发人员在大多数情况下需要显式地使用useMemo。而且，不管什么时候React接收到了children属性，它几乎总要重新渲染，因为每次的子组件都是一棵新的vdom树。这意味着，一个使用Hook的React应用在默认配置下会过度渲染。更糟糕的是，像useMomo这类优化不能轻易地自动应用，因为：
+        它需要正确的deps数组。
+        盲目地任意使用它可能会阻塞本该进行的更新，类似与PureComponent。
+        不幸的是，大多数开发人员都很懒，不会积极地优化他们的应用。所以大多数使用Hook的React应用会做很多不必要的CPU工作。
+
+20、npm run xxx发生了什么
+* 先去package.json的scripts里找到xxx,例如npm run serve实际上执行的就是serve对应的vue-cli-serve serve命令。vue-cli-service serve在命令里直接执行会报错，而npm run serve可以运行是因为通过npm i xxx执行安装依赖，就会在node_modules/.bin/目录中创建vue-cli-service名字的软链接，文件内容是可执行脚本文件
+
+21、Vue+Ts常见问题
+* Vue3的setup里getCurrentInstance获取实例会报不存在
+    解决办法：const {proxy} = getCurrentInstance() as ComponentInternalInstance;
+* Vue3用element-plus的form组件，使用resetFields或者validate方法时，提示没有该属性
+    解决办法：使用InstanceType<typeof ElForm>作为范型约束
+
+22、Vue2和Vue3有啥区别
+* Vue3性能更好，diff算法上优化：
+    Vue2双端比较，定义四个指针分别指向新旧节点的首尾，然后首首比较，首尾比较，尾尾比较，尾首比较
+    Vue3最长递增子序列，比如[3,5,7,1,2,8]的最长递增子序列是[3,5,7,8],定义四个指针分别指向新旧节点的首尾,找到最长递增的不用动，其他的进行移动
+* 响应式原理：
+    Vue2通过Object.defineProperty实现
+    vue3是通过Proxy，用Reflect.get和Reflect.set返回，它有兼容性
+* API使用上区别：
+    Vue3新增组合式API，可以放重复的逻辑在里头，Vue2用mixins
+    Vue3异步加载组件用defineAsyncComponent，Vue2用import（）
+    
+    Vue3可以在template下有多个子节点，添加多个事件多个v-model绑定，新增了teleport将元素插入指定元素下，新增suspense的fallback类似于vue2的slot，移除filter
+* 生命周期区别，用setup代替了beforeCreate、created,使用hooks函数形式比如mounted改为了onMounted()
+
+
+23、Vue和React区别
+* diff算法区别：
+    Vue原则上同级比较，不跨级比较，碰到tag不同删除重建，其节点通过key和tag区分，定义四个指针双端比较。
+    React是dom tree链表，diff算法仅右移，也就是遍历链表相同的位置上新节点和旧节点进行对比，如果新节点相对于旧节点在右边，则旧节点需要右移
+* Event事件区别：
+    Vue是原生的event事件,事件挂载在当前元素上。React是自身合成的sytheticEvent事件，React16之前事件挂载在document上，React16以后挂载根节点上
+* Vue是template模板渲染，生成render函数。React是JSX渲染，生成creatElement函数
+
+24、用过哪些Vue的高级特性
+* 自定义v-model
+vue2：
+    父组件： 
+        <parent v-model="name"></parent>
+        等同于<parent :value="name" @input="$emit('input', $event.target.value)"></parent>
+    子组件：
+        方式1：
+            <input
+                type="text"
+                :value="value"
+                @input="$emit('input', $event.target.value)"
+            >
+            model: {
+                prop: 'v', // default: value
+                event: 'i', // default: input
+            },
+            props:{
+                value: String
+            }
+        方式2：
+            <input v-model="show">
+            computed:{
+                show:{
+                    get() {
+                        return this.value
+                    },
+                    set(v) {
+                        this.$emit('input', v)
+                    }
+                }
+            }
+Vue3:
+    父组件：
+        <custom-comp v-model="msg"></custom-comp>
+        <!-- 等价于 -->
+        <custom-comp :model-value="msg" @update:model-value="msg = $event"></custom-comp>
+        自定义只需要在v-model后添加参数即可，v-model:msg
+    子组件：
+        <input
+            :value="modelValue"
+            @input="$emit('update:modelValue', $event.target.value)"
+        >
+        model: {
+            prop: 'modelValue', // default: modelValue
+            event: 'i', // default: input
+        },
+        props:{
+            modelValue: String
+        }
+* slot
+    具名插槽：
+        父组件：vue2的slot="top"  vue3的v-slot="top"或者v-slot:top
+        子组件
+            slot(name="top")
+    作用域插槽：当父组件想使用子组件的数据时
+        父组件：
+            template(v-slot="slotProps")
+                {{slotProps.slotData.xxx}}
+        子组件：slot(:slotData="子组件的data数据")
+* $nextTick、动态异步组件、keep-alive、mixin、refs

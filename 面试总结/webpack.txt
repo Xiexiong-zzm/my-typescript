@@ -1,0 +1,95 @@
+--------------Webpack---------------------------
+1、前端代码为何要进行构建和打包
+
+2、module、chunk、bundle分别是什么，有什么区别
+
+3、loader和plugin的区别
+* loader的作用是将非JS文件解析成webpack能处理的模块，plugin是webpack额外功能的扩展
+
+4、webpack如何实现按需加载
+* import /*chunkname */
+
+5、webpack性能优化
+①、优化打包构建速度：
+    // 适用于生产环境
+    * 优化babel-loader，开启缓存，用于开发环境:
+        module: {
+            rules:[
+                {
+                    test: /\.js$/,
+                    loader:['babel-loader?cacheDirectory'],
+                    exclude: /node_modules/ // 明确范围
+                }
+            ]
+        }
+    * IgnorePlugin 直接不引入，代码里没有:
+        像有些第三方库只需要用到其中某一个功能  那就单独导入该文件目录的文件夹
+        然后在plugins里new webpack.IgnorePlugin(文件路径)
+    * noParse 引入，但是避免重复打包
+    * happyPack 多进程打包
+    * ParalleUglifyPlugin多进程压缩代码
+
+    // 适用于开发环境
+    * 自动刷新
+    * 热更新hotModuleReplacePlugin（HMR）
+    * DllPlugin
+        打包出dll文件，
+        1、在webpack配置文件中入口，将相关模块放到单独的动态链接库
+        2、output里输出dll的filename
+        3、在plugins中new DllPlugin  name:  path:
+    * DllReferencePlugin
+        在index.html文件中引用  根据manifest.json文件定位找到生成的模块
+
+② 优化产出代码：
+    * 小图片base64位编码，这样可以减少网络请求
+        {
+            test: /\.(png|jpg|jpeg|gif)$/
+            use: {
+                loader: 'url-loader',
+                options: {
+                    limit: 5*1024,  // 小于5kb的图片用base64位的格式产出
+                    outputPath: '' // 打包到哪个目录下
+                }
+            }
+        }
+    * bundle加contentHash值,只有内容发生更改时打包生成新的代码，缓存的js css会失效
+    * 大文件懒加载，通过import的语法，返回promise
+    * 提取公共代码,有些公共的代码没必要重复的去打包
+        splitChunks: {
+            chunks: all,
+            cacheGroups: {
+                // 第三方库
+                vendor: {
+                    name: 'vendor',
+                    prority: 1, // 权重优先级
+                    test: /node_modules/,
+                    minSize: 5*1024, // 针对文件大于它，才进行单独抽取
+                    minChunks: 1 // 最少复用几次，才提取公共代码
+                },
+                common: {
+                    name: 'common',
+                    prority: 0, // 权重优先级
+                    minSize: 5*1024, // 针对文件大于它，才进行单独抽取
+                    minChunks: 2 // 最少复用几次，才提取公共代码
+                },
+            }
+        }
+    * 使用CDN加速，在webpack的output定义publicPath为cdn地址
+    * 使用production，自动开启代码压缩，可以实现tree-shaking
+        只有ES6 Module才可以tree shaking, CommonJS不可以
+        因为ES6 Module编译时引入，CommonJS执行时引入，webpack打包只是静态分析编译，代码暂时未被用户运行
+
+6、babel-runtime和babel-polyfill的区别
+* babel-polyfill编译转换出来的代码变量暴露在window上，babel-runtime会在变量前加_防止被污染，一般用在开发公共库
+
+7、webpack打包机制
+    初始化参数：从配置文件和 Shell 语句中读取与合并参数,得出最终的参数。
+    开始编译：用上一步得到的参数初始化Compiler对象,加载所有配置的插件,执行对象的 run 方法开始执行编译。
+    确定入口：根据配置中的 entry 找出所有的入口文件。
+    编译模块：从入口文件出发,调用所有配置的 Loader 对模块进行翻译,再找出该模块依赖的模块,再递归本步骤直到所有入口依赖的文件都经过了本步骤的处理。
+    完成模块编译：在经过第 4 步使用 Loader 翻译完所有模块后,得到了每个模块被翻译后的最终内容以及它们之间的依赖关系。
+    输出资源：根据入口和模块之间的依赖关系,组装成一个个包含多个模块的Chunk,再把每个Chunk转换成一个单独的文件加入到输出列表,这步是可以修改输出内容的最后机会。
+    输出完成：在确定好输出内容后,根据配置确定输出的路径和文件名,把文件内容写入到文件系统
+
+8、Webpack热更新HMR原理
+* 客户端从服务端拉取更新后的文件，实际上webpack-dev-server和浏览器维护了一个websocket，当本地资源构建打包完WDS会向浏览器推送更新带上构建时的hash，让客户端和上一次资源进行比对，比对出差异后发起请求获取更改内容

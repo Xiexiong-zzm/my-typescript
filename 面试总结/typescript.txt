@@ -1,0 +1,33 @@
+1、ts有几种数据类型
+* boolean、string、number、null、undefined等类型
+    let isDone: boolean = false
+    let str: string = 'aaa'
+    let num: number = 1
+* 数组类型
+    let list: number[] = [1, 2, 3]
+    let list: Array<number> = [1, 2, 3]
+* 元组类型：允许表示一个已知元素数量和类型的数组，各元素的类型不必相同
+* 联合类型：string | number
+* 枚举类型enum：默认从0开始为元素编号，也可以手动的指定成员的数值
+    enum Color {Red, Green, Blue}
+    let c: Color = Color.Green
+
+    enum Color {Red = 1, Green = 2, Blue = 3}
+    let colorName: string = Color[1]
+* any类型：在编程阶段还不清楚类型的变量
+* void类型：表示没有任何类型，当一个函数没有返回值时常见，声明一个void类型的变量没有什么大用，因为你只能为它赋予undefined和null
+* never类型：表示的是那些永不存在的值的类型
+* object类型：表示非原始类型
+
+2、类型断言方式
+* 尖括号
+    let someValue: any = "this is a string"
+    let strLength: number = (<string>someValue).length
+* as
+    let someValue: any = "this is a string";
+    let strLength: number = (someValue as string).length
+
+3、interface和type的区别
+* 相同点：都可以给对象指定类型
+* 不同点：interface只能给对象指定类型，并且可以继承。type可以指定任意类型，不可以继承
+
