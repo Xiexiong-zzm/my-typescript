@@ -1,0 +1,104 @@
+.float {
+    width: 300px;
+    height: 200px;
+}
+.float-left {
+    float: left;
+    width: 100px;
+    height: 200px;
+    background: red;
+}
+.float-center {
+    background: blue;
+}
+.float-right {
+    float: right;
+    width: 100px;
+    height: 200px;
+    background: green;
+}
+
+
+.position{
+    position: relative;
+    width: 300px;
+    height: 200px;
+    padding-top: 50px;
+}
+.position-left {
+    position: absolute;
+    left: 0;
+    width: 100px;
+    height: 200px;
+    background: red;
+}
+.position-center {
+    background: blue;
+}
+.position-right {
+    position: absolute;
+    right: 0;
+    width: 100px;
+    height: 200px;
+    background: green;
+}
+.flex {
+    display: flex;
+    width: 300px;
+    height: 200px;
+    padding-top: 50px;
+}
+.flex-left {
+    width: 100px;
+    height: 200px;
+    background: red;
+}
+.flex-center {
+    flex: 1;
+    background: blue;
+}
+.flex-right {
+    width: 100px;
+    height: 200px;
+    background: green;
+}
+
+.table {
+    display: table;
+    width: 300px;
+    height: 200px;
+    padding-top: 50px;
+}
+.table-left {
+    display: table-cell;
+    width: 100px;
+    height: 200px;
+    background: red;
+}
+.table-center {
+    display: table-cell;
+    background: blue;
+}
+.table-right {
+    display: table-cell;
+    width: 100px;
+    height: 200px;
+    background: green;
+}
+.grid {
+    display: grid;
+    grid-template-columns: 100px auto 100px;
+    grid-template-rows: 200px;
+    width: 300px;
+    height: 200px;
+    padding-top: 50px;
+}
+.grid-left {
+    background: red;
+}
+.grid-center {
+    background: blue;
+}
+.grid-right {
+    background: green;
+}
