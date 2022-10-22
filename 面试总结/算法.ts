@@ -539,3 +539,7 @@ function convert(arr: IArrayItem[]): ItreeNode | null{
     })
     return root
 }
+
+interface Named {
+    name: string;
+}
